@@ -1,12 +1,12 @@
 # Set randome seed to None for random testing, to 0 for deterministic testing
-RANDOM_SEED = None
-# RANDOM_SEED = 0
+#RANDOM_SEED = None
+RANDOM_SEED = 0
 
 PARTICLE_COUNT = 5000       # Total number of particles in your filter
 
 # odometry Gaussian noise model
-ODOM_TRANS_SIGMA = 0.02     # translational err in inch (grid unit)
-ODOM_HEAD_SIGMA = 2         # rotational err in deg
+ODOM_TRANS_SIGMA = 0.05     # translational err in inch (grid unit)
+ODOM_HEAD_SIGMA = 5         # rotational err in deg
 
 # marker measurement Gaussian noise model
 MARKER_TRANS_SIGMA = 0.5    # translational err in inch (grid unit)
