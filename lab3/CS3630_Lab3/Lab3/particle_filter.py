@@ -58,7 +58,7 @@ def measurement_update(particles, measured_marker_list, grid):
     # measurement update
     for i,par in enumerate(particles):
         # read markers based on current particle field of view
-        pmarkers = p.read_markers(grid)
+        pmarkers = par.read_markers(grid)
 
         if len(pmarkers) != 0:
 
