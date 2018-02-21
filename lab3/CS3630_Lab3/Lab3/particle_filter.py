@@ -2,7 +2,8 @@ from grid import *
 from particle import Particle
 from utils import *
 from setting import *
-import math
+import numpy as np
+
 
 def motion_update(particles, odom):
     """ Particle filter motion update
@@ -17,12 +18,15 @@ def motion_update(particles, odom):
     """
     motion_particles = []
     dx,dy,dh = odom
+    if dx == 0 and dy == 0 and dh == 0:
+        return particles
+
     for p in particles:
-        dist = dx**2 + dy**2
+        dist = np.sqrt(dx**2 + dy**2)
         p.h += add_gaussian_noise(dh,ODOM_HEAD_SIGMA)
         p.h %= 360
-        p.x += add_gaussian_noise(dist*math.cos(math.radians(dh)), ODOM_TRANS_SIGMA)
-        p.y += add_gaussian_noise(dist*math.sin(math.radians(dh)), ODOM_TRANS_SIGMA)
+        p.x += add_gaussian_noise(dist*np.cos(np.radians(p.h)), ODOM_TRANS_SIGMA)
+        p.y += add_gaussian_noise(dist*np.sin(np.radians(p.h)), ODOM_TRANS_SIGMA)
         motion_particles.append(p)
 
     return motion_particles
@@ -53,10 +57,14 @@ def measurement_update(particles, measured_marker_list, grid):
                 after measurement update
     """
     measured_particles = []
-    p = [1.0]*len(particles)
+    p = np.array([1.0]*len(particles))
 
     # measurement update
     for i,par in enumerate(particles):
+        if not grid.is_in(par.x,par.y):
+            p[i] = 0
+            #print("???wtf")
+            pass
         # read markers based on current particle field of view
         pmarkers = par.read_markers(grid)
 
@@ -72,24 +80,28 @@ def measurement_update(particles, measured_marker_list, grid):
                 # loop through all the markers to find the closest marker
                 for pm in pmarkers:
                     d = grid_distance(rm[0],rm[1],pm[0],pm[1])
-                    if (not minDistance) || (minDistance > d):
+                    if (not minDistance) or (minDistance > d):
                         minDistance = d
                         pairedM = pm
                         diffAngle = diff_heading_deg(rm[2],pm[2])
 
                 power = - minDistance**2/(2*(MARKER_TRANS_SIGMA**2)) - diffAngle**2/(2*(MARKER_ROT_SIGMA**2))
-                p[i] *= Math.exp(power)
+                p[i] *= np.exp(power)
 
         else:
             if len(measured_marker_list) != 0:
                 p[i] = 0
-        
+
         # if len(measured_marker_list), we will not update the weights (?is that okayy?)
     
     # normalize the weights
     p /= sum(p)
-    # Todo: resample
 
+    # Todo: resample
+    indexes = np.random.choice(a=range(0,len(particles)),size=len(particles),replace=True,p=p).tolist()
+    measured_particles = [particles[i] for i in indexes]
+    rPercent = 0.01
+    measured_particles[0:int(np.rint(rPercent*len(particles)))] = Particle.create_random(int(np.rint(rPercent*len(particles))),grid)
 
     return measured_particles
 
