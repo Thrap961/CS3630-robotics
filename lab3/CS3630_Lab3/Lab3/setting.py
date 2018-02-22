@@ -1,6 +1,6 @@
 # Set randome seed to None for random testing, to 0 for deterministic testing
-#RANDOM_SEED = None
-RANDOM_SEED = 0
+RANDOM_SEED = None
+#RANDOM_SEED = 0
 
 PARTICLE_COUNT = 5000       # Total number of particles in your filter
 
@@ -22,8 +22,8 @@ ROBOT_CAMERA_FOV_DEG = 45   # Robot camera FOV in degree
 ## Feel free to modify the values for debugging
 
 # Clean detection
-DETECTION_FAILURE_RATE = 0.
-SPURIOUS_DETECTION_RATE = 0.
+DETECTION_FAILURE_RATE = 0.1
+SPURIOUS_DETECTION_RATE = 0.1
 # # noisy detection
 # DETECTION_FAILURE_RATE = 0.1
 # SPURIOUS_DETECTION_RATE = 0.1

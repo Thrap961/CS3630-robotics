@@ -63,46 +63,84 @@ def measurement_update(particles, measured_marker_list, grid):
     measured_particles = []
     p = np.array([1.0]*len(particles))
 
-    # measurement update
+   
+
     for i,par in enumerate(particles):
+        # if particle not in grid, weight->0
         if not grid.is_in(par.x,par.y):
             p[i] = 0
             #print("???wtf")
             pass
         # read markers based on current particle field of view
         pmarkers = par.read_markers(grid)
-        if len(pmarkers) != 0:
+        lp = max(0, len(pmarkers)-len(measured_marker_list))
+        lr = max(0, len(measured_marker_list)-len(pmarkers))
 
             # find a best pairing marker in the pmarkers for each robot sensed marker
             ######################### I didn't consider the repeated paired pmarkers!!!! Does that matter? ###################### 
+            # If we do not have new information, no particle update. (implicit)
+
+        if len(measured_marker_list) ==0 and len(pmarkers)==0:
+            p[i] = 1
+        elif len(measured_marker_list)==0 or len(pmarkers)==0:
+            p[i] = DETECTION_FAILURE_RATE*SPURIOUS_DETECTION_RATE
+        else:
             for rm in measured_marker_list:
 
-                # suppose no paired marker
-                pairedM = None
+                    # suppose no paired marker
+                    #pairedM = None
                 minDistance = None
                 diffAngle = None
-                # loop through all the markers to find the closest marker
+                    # loop through all the markers to find the closest marker
+
+
 
                 for pm in pmarkers:
-                    d = grid_distance(rm[0],rm[1],pm[0],pm[1])
+                    #pm0, pm1, pm2 = add_marker_measurement_noise(pm, MARKER_TRANS_SIGMA,MARKER_ROT_SIGMA)
+                    pm0, pm1, pm2 = pm[0],pm[1],pm[2]
+                    d = grid_distance(rm[0],rm[1],pm0,pm1)
+                    angle = diff_heading_deg(rm[2], pm2)
                     if (not minDistance) or (minDistance > d):
                         minDistance = d
-                        pairedM = pm
-                        diffAngle = diff_heading_deg(rm[2],pm[2])
+                        diffAngle = diff_heading_deg(rm[2],pm2)
 
                 power = - (minDistance**2)/(2*(MARKER_TRANS_SIGMA**2)) - (diffAngle**2)/(2*(MARKER_ROT_SIGMA**2))
                 p[i] *= np.exp(power)
 
-        else:
-            if len(measured_marker_list) != 0:
-                p[i] = 0
+        
+
+        p[i] = max(p[i], DETECTION_FAILURE_RATE*SPURIOUS_DETECTION_RATE)
+
+        p[i] *= (DETECTION_FAILURE_RATE**lp)
+        p[i] *= (SPURIOUS_DETECTION_RATE**lr)
 
 
-        # if len(measured_marker_list) == 0, we will not update the weights (?is that okayy?)
+
+        #     # ling hun bu zhou
+        #     if len(measured_marker_list) == 0:
+        #         p[i] = 0
+        #     if len(pmarkers) != len(measured_marker_list):
+        #         #p[i]/=2
+        #         p[i] *= SPURIOUS_DETECTION_RATE**(abs(len(pmarkers)-len(measured_marker_list)))
+
+        # else:
+        #     if len(measured_marker_list) != 0:
+        #         p[i] = 0
+    # print ('avg')
+    # print (np.mean(p))
+    # print (np.var(p))
+
+    # if (np.var(p))>0.05 and (np.mean(p))<0.1:
+    #     print('gg')
+    #     rPercent = 0.05
+    # else:
+    #     rPercent = 0.02
+        
 
     # normalize the weights
     p /= sum(p)
 
+    #pp = 
 
     # Todo: resample
     rPercent = 0.01
