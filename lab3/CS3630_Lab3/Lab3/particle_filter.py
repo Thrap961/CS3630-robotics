@@ -143,7 +143,7 @@ def measurement_update(particles, measured_marker_list, grid):
     #pp = 
 
     # Todo: resample
-    rPercent = 0.01
+    rPercent = 0.015
     numRand = int(np.rint(rPercent*len(particles)))
     indexes = np.random.choice(a=range(0,len(particles)),size=(len(particles) - numRand),replace=True,p=p).tolist()
     measured_particles[0:numRand] = Particle.create_random(numRand,grid)
